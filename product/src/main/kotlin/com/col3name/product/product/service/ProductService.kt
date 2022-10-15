@@ -10,19 +10,14 @@ class ProductService(val db: JdbcTemplate) {
         Product(response.getLong("id"), response.getString("name"))
     }
 
+    fun findProductById(id: Long): List<Product> = db.query("select * from products where id = $id") { response, _ ->
+        Product(response.getLong("id"), response.getString("name"))
+    }
+
     fun save(product: Product) {
         db.update(
             "insert into products (name) values (?);",
             product.name
         )
     }
-//
-//    fun findProductById(id: String): List<Product> {
-//        val user: Product = db.query("SELECT * FROM products WHERE ID = :id")
-//            .bind("id", 1)
-//            .fetchOne(Product::class.java)
-//    }
-//    { response, _ ->
-//        Product(response.getLong("id"), response.getString("name"))
-//    }
 }

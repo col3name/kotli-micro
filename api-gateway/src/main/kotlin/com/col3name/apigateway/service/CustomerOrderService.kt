@@ -7,6 +7,9 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
 
 @Service
 class CustomerOrderService {
@@ -32,28 +35,22 @@ class CustomerOrderService {
         return orderList
     }
 
+    private fun getClientOrdersAdapter(clientId: Long): List<OrderDTO> {
+        val url = "http://localhost:8082/api/v1/orders?client_id=$clientId"
+        val text = makeGetRequest(url)
+        return Json.decodeFromString(text)
+    }
+
     private fun getCustomerDataAdapter(clientId: Long): CustomerDTO {
-        //TODO refactor to adapter and make http request
         val url = "http://localhost:8081/api/v1/customers/$clientId"
-        println(makeGetRequest(url))
-        return CustomerDTO(clientId, "mikha")
+        val text = makeGetRequest(url)
+        return Json.decodeFromString(text)
     }
 
     private fun getProductDataAdapter(productId: Long): ProductDTO {
-        //TODO refactor to adapter and make http request
         val url = "http://localhost:8080/api/v1/products/$productId"
-        println(makeGetRequest(url))
-        return ProductDTO(1, "macbook pro 14.2 16gb 512gb")
-    }
-
-    private fun getClientOrdersAdapter(clientId: Long): List<OrderDTO> {
-        //TODO refactor to adapter and make http request
-        val url = "http://localhost:8082/api/v1/orders?client_id=$clientId"
-        println(makeGetRequest(url))
-        return listOf(
-            OrderDTO(1, 1),
-            OrderDTO(2, 2)
-        )
+        val text = makeGetRequest(url)
+        return Json.decodeFromString(text)
     }
 
     private fun makeGetRequest(url :String): String {
@@ -68,6 +65,11 @@ class CustomerOrderService {
     }
 }
 
+@Serializable
 data class CustomerDTO(val id: Long, val name: String)
+
+@Serializable
 data class ProductDTO(val id: Long, val name: String)
+
+@Serializable
 data class OrderDTO(val id: Long, val productId: Long)

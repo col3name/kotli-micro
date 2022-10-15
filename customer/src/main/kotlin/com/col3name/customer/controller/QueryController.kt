@@ -23,7 +23,7 @@ class QueryController(
 
     @GetMapping("/{id}")
     fun getById(@PathVariable id: Long): Customer {
-        val customers = customerService.findCustomers()
+        val customers = customerService.findCustomer(id)
         if (customers.isEmpty() ){
             return Customer(1, "not found")
         }

@@ -16,6 +16,10 @@ class CustomerService(val db: JdbcTemplate) {
             product.name
         )
     }
+
+    fun findCustomer(customerId: Long): List<Customer> = db.query("select * from customers where id = $customerId") { response, _ ->
+        Customer(response.getLong("id"), response.getString("name"))
+    }
 //
 //    fun findProductById(id: String): List<Product> {
 //        val user: Product = db.query("SELECT * FROM products WHERE ID = :id")

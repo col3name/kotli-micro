@@ -16,7 +16,7 @@ class QueryController(
     @GetMapping("")
     fun index(
         @RequestHeader headers: HttpHeaders,
-        @RequestParam(name = "client_id", defaultValue = "1") clientId: Long
+        @RequestParam(name = "client_id", defaultValue = "0") clientId: Long
     ): List<Order> {
         return orderService.findClientOrders(clientId)
     }

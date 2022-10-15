@@ -32,16 +32,16 @@ class QueryController(
 //        kafkaTemplate.send("product.request.findAll", "GET /person/name OK > $name")
 //         kafkaTemplate.send("product.request.findAll", "GET /person/name BadRequest > $name")
         return productService.findProducts()
-//        return listOf(
-//            Product(1, "macbook air 16gb 512gb 2020"),
-//            Product(2, "macbook pro 14.2 16gb 512gb 2021")
-//        )
     }
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): Product =
-        productService.findProducts().first { product: Product -> product.id == id }
-
+    fun getById(@PathVariable id: Long): Product {
+        val customers = productService.findProductById(id)
+        if (customers.isEmpty() ){
+            return Product(1, "not found")
+        }
+        return customers.first { customer: Product -> customer.id == id }
+    }
     @PostMapping("")
     fun store(@RequestBody product: Product) {
         productService.save(product)
