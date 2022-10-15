@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS products
+(
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS customer
+(
+    id   SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+-- CREATE TABLE IF NOT EXISTS orders
+-- (
+--     id   SERIAL PRIMARY KEY,
+--     product_id NUMERIC NOT NULL,
+--
+-- );

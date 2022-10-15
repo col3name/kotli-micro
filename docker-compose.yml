@@ -1,0 +1,147 @@
+version: "3.9"
+services:
+#  zookeeper:
+#    image: confluentinc/cp-zookeeper:7.0.1
+#    container_name: zookeeper
+#    environment:
+#      ZOOKEEPER_CLIENT_PORT: 2181
+#      ZOOKEEPER_TICK_TIME: 2000
+#    networks:
+#      - dev-network
+#
+#  broker:
+#    image: confluentinc/cp-kafka:7.0.1
+#    container_name: broker
+#    ports:
+#      # To learn about configuring Kafka for access across networks see
+#      # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+#      - "9092:9092"
+#    depends_on:
+#      - zookeeper
+#    networks:
+#      - dev-network
+#    environment:
+#      KAFKA_BROKER_ID: 1
+#      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+#      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  product-app:
+    image: mikhailmi/product-app:master
+    container_name: product-app
+    hostname: product-app
+    ports:
+      - "8080:8080"
+    build:
+      context: .
+      dockerfile: product/Dockerfile
+    environment:
+      PORT: 8080
+      DATABASE_ADDRESS: "product-postgres:5432"
+      DATABASE_NAME: product
+      DATABASE_USER: product
+      DATABASE_PASSWORD: product
+      DATABASE_CONNECTION_TIMEOUT: 500
+      DATABASE_MAX_CONNECTION: 100
+    networks:
+      - dev-network
+    depends_on:
+      - product-postgres
+
+  customer-app:
+    image: mikhailmi/customer-app:master
+    container_name: customer-app
+    hostname: product-app
+    ports:
+      - "8081:8081"
+    build:
+      context: .
+      dockerfile: customer/Dockerfile
+    environment:
+      PORT: 8080
+      DATABASE_ADDRESS: "product-postgres:5432"
+      DATABASE_NAME: product
+      DATABASE_USER: product
+      DATABASE_PASSWORD: product
+      DATABASE_CONNECTION_TIMEOUT: 500
+      DATABASE_MAX_CONNECTION: 100
+    networks:
+      - dev-network
+    depends_on:
+      - product-postgres
+#      - broker
+
+  product-postgres:
+    image: postgres:13
+    hostname: product-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - product-postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: product
+      POSTGRES_PASSWORD: product
+      POSTGRES_DB: product
+    networks:
+      - dev-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U product -d product" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+#
+#  customer-app:
+#    image: mikhailmi/customer-app:master
+#    container_name: customer-app
+#    hostname: customer-app
+#    ports:
+#      - "8081:8080"
+#    build:
+#      context: .
+#      dockerfile: customer/Dockerfile
+#    environment:
+#      PORT: 8080
+#      DATABASE_ADDRESS: "product-postgres:5432"
+#      DATABASE_NAME: product
+#      DATABASE_USER: product
+#      DATABASE_PASSWORD: product
+#      DATABASE_CONNECTION_TIMEOUT: 500
+#      DATABASE_MAX_CONNECTION: 100
+#    networks:
+#      - dev-network
+#    depends_on:
+#      - product-postgres
+
+#  customer-postgres:
+#    image: postgres:13
+#    hostname: customer-postgres
+#    restart: unless-stopped
+#    ports:
+#      - "5433:5432"
+#    volumes:
+#      - customer-postgres-data:/var/lib/postgresql/data
+#    environment:
+#      POSTGRES_USER: customer
+#      POSTGRES_PASSWORD: customer
+#      POSTGRES_DB: customer
+#    networks:
+#      - dev-network
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -U customer -d customer" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 10s
+
+volumes:
+  product-postgres-data:
+  customer-postgres-data:
+
+networks:
+  dev-network:
+    driver: bridge

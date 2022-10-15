@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS orders
+(
+    id   SERIAL PRIMARY KEY,
+    product_id NUMERIC NOT NULL,
+    client_id NUMERIC NOT NULL
+);
