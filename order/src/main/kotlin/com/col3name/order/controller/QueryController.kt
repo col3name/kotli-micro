@@ -3,6 +3,8 @@ package com.col3name.order.controller
 import com.col3name.order.model.Order
 import com.col3name.order.service.OrderService
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.web.bind.annotation.*
 import java.util.*
@@ -17,8 +19,9 @@ class QueryController(
     fun index(
         @RequestHeader headers: HttpHeaders,
         @RequestParam(name = "client_id", defaultValue = "0") clientId: Long
-    ): List<Order> {
-        return orderService.findClientOrders(clientId)
+    ): ResponseEntity<List<Order>> {
+        val orders = orderService.findClientOrders(clientId)
+        return ResponseEntity(orders, HttpStatus.OK)
     }
 
     @PostMapping("")

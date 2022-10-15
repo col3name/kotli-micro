@@ -2,10 +2,10 @@ package com.col3name.product.product.controller
 
 import com.col3name.product.product.model.Product
 import com.col3name.product.product.service.ProductService
-import org.apache.kafka.clients.producer.KafkaProducer
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.util.MultiValueMap
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
@@ -23,7 +23,7 @@ class QueryController(
     fun index(
         @RequestHeader headers: HttpHeaders,
         @RequestParam(name = "name", defaultValue = "User") name: String
-    ): List<Product> {
+    ): ResponseEntity<List<Product>> {
         // let's print all
 //        headers.forEach {
 //            println("${it.key}: ${it.value}")
@@ -31,17 +31,18 @@ class QueryController(
 //        kafkaTemplate.send("topic1", "test")
 //        kafkaTemplate.send("product.request.findAll", "GET /person/name OK > $name")
 //         kafkaTemplate.send("product.request.findAll", "GET /person/name BadRequest > $name")
-        return productService.findProducts()
+        return ResponseEntity(productService.findProducts(), HttpStatus.OK)
     }
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): Product {
-        val customers = productService.findProductById(id)
-        if (customers.isEmpty() ){
-            return Product(1, "not found")
+    fun getById(@PathVariable id: Long): ResponseEntity<Product> {
+        val customer = productService.findProductById(id)
+        if (customer.isEmpty) {
+            return ResponseEntity(HttpStatus.NOT_FOUND)
         }
-        return customers.first { customer: Product -> customer.id == id }
+        return ResponseEntity(customer.get(), HttpStatus.OK)
     }
+
     @PostMapping("")
     fun store(@RequestBody product: Product) {
         productService.save(product)

@@ -18,5 +18,6 @@
 - [ ] store to kafka request and response info
 - [ ] split by application layers
 - [ ] write test
-- [ ] return ResponseEntity on controllers methods
+- [x] return ResponseEntity on controllers methods
 - [ ] move common code to common module
+- [ ] handle exceptions
