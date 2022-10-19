@@ -3,9 +3,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
 	id("org.springframework.boot") version "2.7.4"
 	id("io.spring.dependency-management") version "1.0.14.RELEASE"
-	kotlin("jvm") version "1.6.21"
-	kotlin("plugin.spring") version "1.6.21"
-	kotlin("plugin.jpa") version "1.6.21"
+	kotlin("jvm") version "1.7.20"
+	kotlin("plugin.spring") version "1.7.20"
+	kotlin("plugin.jpa") version "1.7.20"
+	kotlin("plugin.serialization") version "1.7.20"
 }
 
 group = "com.col3name.product"
@@ -17,14 +18,14 @@ repositories {
 }
 
 extra["testcontainersVersion"] = "1.17.4"
-
 dependencies {
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+	implementation("org.springframework.kafka:spring-kafka")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	implementation("org.springframework.kafka:spring-kafka")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

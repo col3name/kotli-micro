@@ -2,34 +2,46 @@ package com.col3name.apigateway.service
 
 import com.col3name.apigateway.model.CustomerOrder
 import com.col3name.apigateway.model.Order
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
+import java.time.LocalDateTime
 import java.util.*
-import kotlin.collections.ArrayList
 
 @Service
 class CustomerOrderService {
-    suspend fun get(clientId: Long): CustomerOrder {
-        val orders: List<OrderDTO> = getClientOrdersAdapter(clientId)
+    fun fetchDataAsync(clientId: Long): CustomerOrder {
+        val deferredCustomer = getCustomerDataAdapterAsync(clientId)
+        val clientOrdersResponse = getClientOrdersAsync(clientId)
 
-        println("orders")
-        println(orders)
-        val orderList = mapAndFetchOrders(orders)
-        println("order list")
-        println(orderList)
-        val customer = getCustomerDataAdapter(clientId)
-        //TODO parallel fetch data
+        var current = LocalDateTime.now().toString()
+
+        println("done $current")
+        val customer: Optional<CustomerDTO> = deferredCustomer
+        val orders: List<Order> = clientOrdersResponse
+        current = LocalDateTime.now().toString()
+        println("wait $current")
         var customerName = ""
         if (customer.isPresent) {
             customerName = customer.get().name
         }
-        return CustomerOrder(customerName, orderList)
+        return CustomerOrder(customerName, orders)
+    }
+
+    private fun getClientOrdersAsync(clientId: Long): List<Order> {
+        val orders = getClientOrdersAdapter(clientId)
+        println("orders")
+        println(orders)
+
+        val orderList = mapAndFetchOrders(orders)
+        println("order list")
+        println(orderList)
+        return orderList
     }
 
     private fun mapAndFetchOrders(orders: List<OrderDTO>): List<Order> {
@@ -56,7 +68,7 @@ class CustomerOrderService {
         return Json.decodeFromString(text)
     }
 
-    private fun getCustomerDataAdapter(clientId: Long): Optional<CustomerDTO> {
+    private fun getCustomerDataAdapterAsync(clientId: Long): Optional<CustomerDTO> {
         val url = "http://localhost:8081/api/v1/customers/$clientId"
         val text = makeGetRequest(url)
         if (text.isEmpty()) {
@@ -75,13 +87,13 @@ class CustomerOrderService {
     }
 
     private fun makeGetRequest(url: String): String {
-        val client = HttpClient.newBuilder().build();
+        val client = HttpClient.newBuilder().build()
         val request = HttpRequest.newBuilder()
             .uri(URI.create(url))
-            .build();
+            .build()
 
         try {
-            val response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            val response = client.send(request, HttpResponse.BodyHandlers.ofString())
             println(url)
             if (response.statusCode() >= 400) {
                 return ""

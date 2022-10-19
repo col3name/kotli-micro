@@ -19,21 +19,14 @@ class CustomerService(val db: JdbcTemplate) {
     }
 
     fun findCustomer(customerId: Long): Optional<Customer> {
-        val query = db.query("select * from customers where id = $customerId") { response, _ ->
+        val customers = db.query("select * from customers where id = $customerId") { response, _ ->
             Customer(response.getLong("id"), response.getString("name"))
         }
-        if (query.isEmpty()) {
+        println(customers)
+        if (customers.isEmpty()) {
             return Optional.empty()
         }
-        return Optional.of(query.first())
+        return Optional.of(customers.first())
     }
-//
-//    fun findProductById(id: String): List<Product> {
-//        val user: Product = db.query("SELECT * FROM products WHERE ID = :id")
-//            .bind("id", 1)
-//            .fetchOne(Product::class.java)
-//    }
-//    { response, _ ->
-//        Product(response.getLong("id"), response.getString("name"))
-//    }
+
 }

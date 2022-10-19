@@ -8,15 +8,13 @@ import org.springframework.kafka.annotation.KafkaListener
 
 @SpringBootApplication
 class ProductApplication {
-//	@Bean
-//	fun topic() = NewTopic("topic1", 10, 1)
-//
-//	@KafkaListener(id = "myId", topics = ["topic1"])
-//	fun listen(value: String?) {
-//		println(value)
-//	}
-//	@Bean
-//	fun topics() = NewTopic("topic1", 10, 1)
+	@Bean
+	fun topic() = NewTopic("topic1", 1, 1)
+
+	@KafkaListener(id = "myId", topics = ["topic1"])
+	fun listen(value: String?) {
+		println(value)
+	}
 }
 
 fun main(args: Array<String>) {

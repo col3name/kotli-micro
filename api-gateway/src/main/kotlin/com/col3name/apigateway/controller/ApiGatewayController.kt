@@ -2,25 +2,47 @@ package com.col3name.apigateway.controller
 
 import com.col3name.apigateway.model.CustomerOrder
 import com.col3name.apigateway.service.CustomerOrderService
+import com.col3name.apigateway.service.Message
+import com.col3name.apigateway.service.Request
+import com.col3name.apigateway.service.Response
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.web.bind.annotation.*
-import java.lang.Exception
 
 @RestController
 @RequestMapping("/api/v1")
-class ApiGatewayController(val customerOrderService: CustomerOrderService) {
+class ApiGatewayController(
+    val customerOrderService: CustomerOrderService,
+    val kafkaTemplate: KafkaTemplate<String, String>
+) {
+    private val kafkaTopic = "topic1"
+
     @GetMapping("/orders")
     fun index(
         @RequestHeader headers: HttpHeaders,
-        @RequestParam(name = "client_id", defaultValue = "1") clientId: Long
+        @RequestParam(name = "client_id", defaultValue = "-1") clientId: Long
     ): ResponseEntity<CustomerOrder> {
+        val url = "/api/v1/orders?client_id=$clientId"
+        var status = HttpStatus.OK
+        val request = Request(url, headers.toString())
         return try {
-            ResponseEntity(customerOrderService.get(clientId), HttpStatus.OK)
+            val customerOrder = customerOrderService.fetchDataAsync(clientId)
+            val data = Message(request, Response(customerOrder, status.value()))
+            kafkaTemplate.send(kafkaTopic, Json.encodeToString(data))
+
+            ResponseEntity(customerOrder, status)
         } catch (e: Exception) {
+            //TODO use logger library
             println(e)
-            ResponseEntity(HttpStatus.NOT_FOUND)
+            status = HttpStatus.NOT_FOUND
+            val data = Message(request, Response("", status.value()))
+            kafkaTemplate.send(kafkaTopic, Json.encodeToString(data))
+
+            ResponseEntity(status)
         }
     }
 }
