@@ -1,48 +1,19 @@
 version: "3.9"
 services:
-#  zookeeper:
-#    image: confluentinc/cp-zookeeper:7.0.1
-#    container_name: zookeeper
-#    environment:
-#      ZOOKEEPER_CLIENT_PORT: 2181
-#      ZOOKEEPER_TICK_TIME: 2000
-#    networks:
-#      - dev-network
-#
-#  broker:
-#    image: confluentinc/cp-kafka:7.0.1
-#    container_name: broker
-#    ports:
-#      # To learn about configuring Kafka for access across networks see
-#      # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
-#      - "9092:9092"
-#    depends_on:
-#      - zookeeper
-#    networks:
-#      - dev-network
-  #    environment:
-  #      KAFKA_BROKER_ID: 1
-  #      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-  #      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-  #      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
-  #      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  #      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-  #      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - "22181:2181"
+      - "127.0.0.1:22181:2181"
 
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
       - zookeeper
     ports:
-      - "29092:29092"
+      - "127.0.0.1:29092:29092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -56,7 +27,7 @@ services:
     container_name: api-gateway-app
     hostname: api-gateway-app
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     build:
       context: .
       dockerfile: api-gateway/Dockerfile
@@ -72,7 +43,7 @@ services:
     container_name: product-app
     hostname: product-app
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     build:
       context: .
       dockerfile: product/Dockerfile
@@ -86,7 +57,7 @@ services:
     container_name: customer-app
     hostname: customer-app
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     build:
       context: .
       dockerfile: customer/Dockerfile
@@ -100,7 +71,7 @@ services:
     container_name: order-app
     hostname: order-app
     ports:
-      - "8082:8082"
+      - "127.0.0.1:8082:8082"
     build:
       context: .
       dockerfile: order/Dockerfile
@@ -114,7 +85,7 @@ services:
     hostname: product-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - product-postgres-data:/var/lib/postgresql/data
     environment:

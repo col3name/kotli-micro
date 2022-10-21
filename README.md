@@ -21,4 +21,4 @@
 - [x] return ResponseEntity on controllers methods
 - [ ] move common code to common module
 - [ ] handle exceptions
-- [ ] Service registry as library on common module
+- [ ] Service registry as library on common module for event validation
