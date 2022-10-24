@@ -28,6 +28,17 @@ dependencies {
     implementation("org.springframework.kafka:spring-kafka")
     implementation("com.google.code.gson:gson:2.9.1")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:retrofit-mock:2.9.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+
+    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
+    implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
+    implementation("com.squareup.retrofit2:adapter-rxjava2:2.9.0")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.testcontainers:junit-jupiter")

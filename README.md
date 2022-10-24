@@ -13,12 +13,9 @@
 ### TODO
 
 - [ ] setup all services on docker-compose.yml
-- [x] setup adapter on api-gateway-service (parse response)
-- [x] fix find by id on order, customer, product services
 - [x] store to kafka request and response info
-- [ ] split by application layers
+- [ ] split application to layers
 - [ ] write test
-- [x] return ResponseEntity on controllers methods
 - [ ] move common code to common module
 - [ ] handle exceptions
-- [ ] Service registry as library on common module for event validation
+- [ ] service registry as library on common module for event validation

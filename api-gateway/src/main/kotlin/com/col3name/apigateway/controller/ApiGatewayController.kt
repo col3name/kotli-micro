@@ -26,11 +26,13 @@ class ApiGatewayController(
         @RequestHeader headers: HttpHeaders,
         @RequestParam(name = "client_id", defaultValue = "-1") clientId: Long
     ): ResponseEntity<CustomerOrder> {
-        val url = "/api/v1/orders?client_id=$clientId"
         var status = HttpStatus.OK
-        val request = Request(url, headers.toString())
+        val request = Request(getUrl(clientId), headers.toString())
         return try {
             val customerOrder = customerOrderService.fetchDataAsync(clientId)
+            if (customerOrder == null) {
+                throw Exception("timeout")
+            }
             val data = Message(request, Response(customerOrder, status.value()))
             kafkaTemplate.send(kafkaTopic, Json.encodeToString(data))
 
@@ -44,5 +46,9 @@ class ApiGatewayController(
 
             ResponseEntity(status)
         }
+    }
+
+    private fun getUrl(clientId: Long): String {
+        return "/api/v1/orders?client_id=$clientId"
     }
 }

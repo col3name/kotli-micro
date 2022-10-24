@@ -2,6 +2,10 @@ package com.col3name.apigateway.service
 
 import com.col3name.apigateway.model.CustomerOrder
 import com.col3name.apigateway.model.Order
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -10,53 +14,55 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.time.LocalDateTime
 import java.util.*
 
 @Service
 class CustomerOrderService {
     fun fetchDataAsync(clientId: Long): CustomerOrder {
-        val deferredCustomer = getCustomerDataAdapterAsync(clientId)
-        val clientOrdersResponse = getClientOrdersAsync(clientId)
-
-        var current = LocalDateTime.now().toString()
-
-        println("done $current")
+        val deferredCustomer = getCustomerDataAdapter(clientId)
         val customer: Optional<CustomerDTO> = deferredCustomer
-        val orders: List<Order> = clientOrdersResponse
-        current = LocalDateTime.now().toString()
-        println("wait $current")
-        var customerName = ""
-        if (customer.isPresent) {
-            customerName = customer.get().name
-        }
-        return CustomerOrder(customerName, orders)
-    }
-
-    private fun getClientOrdersAsync(clientId: Long): List<Order> {
-        val orders = getClientOrdersAdapter(clientId)
-        println("orders")
-        println(orders)
-
-        val orderList = mapAndFetchOrders(orders)
-        println("order list")
-        println(orderList)
-        return orderList
-    }
-
-    private fun mapAndFetchOrders(orders: List<OrderDTO>): List<Order> {
-        val orderList: MutableList<Order> = ArrayList()
-        orders.forEach { orderDTO ->
-            val product = getProductDataAdapter(orderDTO.productId)
-            val order = if (product.isEmpty) {
-                Order(orderDTO.id, 0, "")
-            } else {
-                val item = product.get()
-                Order(orderDTO.id, item.id, item.name)
+        var orders: List<Order>
+        val customerOrder: CustomerOrder
+        runBlocking {
+            orders = getClientOrdersAsync(clientId)
+            var customerName = ""
+            if (customer.isPresent) {
+                customerName = customer.get().name
             }
-            orderList.add(order)
+
+            customerOrder = CustomerOrder(customerName, orders)
         }
-        return orderList
+        Thread.sleep(500)
+        return customerOrder
+    }
+
+    private suspend fun getClientOrdersAsync(clientId: Long): List<Order> {
+        val orders = getClientOrdersAdapter(clientId)
+        val channel = Channel<Order>(10)
+
+        mapAndFetchOrdersAsync(orders, channel)
+        var allOrderList = emptyList<Order>()
+        repeat(orders.size) {
+            allOrderList = (allOrderList + channel.receive())
+        }
+
+        return allOrderList
+    }
+
+    private suspend fun mapAndFetchOrdersAsync(orders: List<OrderDTO>, channel: Channel<Order>) = coroutineScope {
+        //TODO call api with retrofit
+        orders.map { orderDTO ->
+            launch {
+                val product = getProductDataAdapter(orderDTO.productId)
+                val order = if (product.isEmpty) {
+                    Order(orderDTO.id, 0, "")
+                } else {
+                    val item = product.get()
+                    Order(orderDTO.id, item.id, item.name)
+                }
+                channel.send(order)
+            }
+        }
     }
 
     private fun getClientOrdersAdapter(clientId: Long): List<OrderDTO> {
@@ -68,7 +74,7 @@ class CustomerOrderService {
         return Json.decodeFromString(text)
     }
 
-    private fun getCustomerDataAdapterAsync(clientId: Long): Optional<CustomerDTO> {
+    private fun getCustomerDataAdapter(clientId: Long): Optional<CustomerDTO> {
         val url = "http://localhost:8081/api/v1/customers/$clientId"
         val text = makeGetRequest(url)
         if (text.isEmpty()) {
