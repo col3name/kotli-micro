@@ -9,6 +9,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.net.http.HttpClient
@@ -18,6 +20,8 @@ import java.util.*
 
 @Service
 class CustomerOrderService {
+    private val logger: Logger = LoggerFactory.getLogger(CustomerOrderService::class.java)
+
     fun fetchDataAsync(clientId: Long): CustomerOrder {
         val deferredCustomer = getCustomerDataAdapter(clientId)
         val customer: Optional<CustomerDTO> = deferredCustomer
@@ -29,7 +33,6 @@ class CustomerOrderService {
             if (customer.isPresent) {
                 customerName = customer.get().name
             }
-
             customerOrder = CustomerOrder(customerName, orders)
         }
         Thread.sleep(500)
@@ -106,8 +109,7 @@ class CustomerOrderService {
             }
             return response.body()
         } catch (e: Exception) {
-            //TODO add slf4j
-            println(e)
+            logger.error(e.message)
             return ""
         }
     }

@@ -38,6 +38,7 @@ dependencies {
     implementation("io.reactivex.rxjava2:rxjava:2.2.21")
     implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
     implementation("com.squareup.retrofit2:adapter-rxjava2:2.9.0")
+    implementation("org.springframework.boot:spring-boot-starter-log4j2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
