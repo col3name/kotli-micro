@@ -41,6 +41,9 @@ class CustomerOrderService {
                 retry * 3000L
             }
         }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 300
+        }
     }
 
     fun fetchDataAsync(clientId: Long): CustomerOrder {
