@@ -1,5 +1,6 @@
 package com.col3name.apigateway.service
 
+import com.col3name.apigateway.Adapter
 import com.col3name.apigateway.model.CustomerOrder
 import com.col3name.apigateway.model.Order
 import kotlinx.coroutines.channels.Channel
@@ -7,44 +8,17 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.springframework.stereotype.Service
-import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import java.lang.Exception
 import java.util.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 @Service
 class CustomerOrderService {
     private val logger: Logger = LoggerFactory.getLogger(CustomerOrderService::class.java)
-
-    private val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-            })
-        }
-        install(HttpRequestRetry) {
-            retryOnServerErrors(maxRetries = 10)
-            modifyRequest { request ->
-                request.headers.append("x-retry-count", retryCount.toString())
-            }
-            delayMillis { retry ->
-                retry * 3000L
-            }
-        }
-        install(HttpTimeout) {
-            requestTimeoutMillis = 300
-        }
-    }
 
     fun fetchDataAsync(clientId: Long): CustomerOrder {
         val customerOrder: CustomerOrder
@@ -58,7 +32,6 @@ class CustomerOrderService {
             }
             customerOrder = CustomerOrder(customerName, orders)
         }
-        Thread.sleep(500)
         return customerOrder
     }
 
@@ -94,7 +67,7 @@ class CustomerOrderService {
     private suspend fun getClientOrdersAdapter(clientId: Long): List<OrderDTO> {
         val url = "http://localhost:8082/api/v1/orders?client_id=$clientId"
         return try {
-            client.get(url).body()
+            Adapter.getClient().get(url).body()
         } catch (e: Exception) {
             logger.error(e.message)
             return listOf()
@@ -104,7 +77,7 @@ class CustomerOrderService {
     private suspend fun getCustomerDataAdapter(clientId: Long): Optional<CustomerDTO> {
         val url = "http://localhost:8081/api/v1/customers/$clientId"
         return try {
-            val response: CustomerDTO = client.get(url).body()
+            val response: CustomerDTO = Adapter.getClient().get(url).body()
             Optional.of(response)
         } catch (e: Exception) {
             logger.error(e.message)
@@ -115,7 +88,7 @@ class CustomerOrderService {
     private suspend fun getProductDataAdapter(productId: Long): Optional<ProductDTO> {
         val url = "http://localhost:8080/api/v1/products/$productId"
         return try {
-            val response: ProductDTO = client.get(url).body()
+            val response: ProductDTO = Adapter.getClient().get(url).body()
             Optional.of(response)
         } catch (e: Exception) {
             logger.error(e.message)

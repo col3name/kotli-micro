@@ -15,3 +15,6 @@ up: buildProduct buildCustomer buildOrder buildApiGateway
 
 down:
 	docker compose down
+
+bench:
+	ab -r -c 5 -n 600 "http://127.0.0.1:8000/api/v1/orders?client_id=2"
