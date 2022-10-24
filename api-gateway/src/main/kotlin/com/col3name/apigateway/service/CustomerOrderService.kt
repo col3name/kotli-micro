@@ -7,28 +7,48 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import org.springframework.stereotype.Service
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.request.*
+import java.lang.Exception
+import java.util.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
-import java.util.*
 
 @Service
 class CustomerOrderService {
     private val logger: Logger = LoggerFactory.getLogger(CustomerOrderService::class.java)
 
+    private val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json {
+                prettyPrint = true
+                isLenient = true
+            })
+        }
+        install(HttpRequestRetry) {
+            retryOnServerErrors(maxRetries = 10)
+            modifyRequest { request ->
+                request.headers.append("x-retry-count", retryCount.toString())
+            }
+            delayMillis { retry ->
+                retry * 3000L
+            }
+        }
+    }
+
     fun fetchDataAsync(clientId: Long): CustomerOrder {
-        val deferredCustomer = getCustomerDataAdapter(clientId)
-        val customer: Optional<CustomerDTO> = deferredCustomer
-        var orders: List<Order>
         val customerOrder: CustomerOrder
         runBlocking {
-            orders = getClientOrdersAsync(clientId)
+            val deferredCustomer = getCustomerDataAdapter(clientId)
+            val customer: Optional<CustomerDTO> = deferredCustomer
+            val orders = getClientOrdersAsync(clientId)
             var customerName = ""
             if (customer.isPresent) {
                 customerName = customer.get().name
@@ -44,6 +64,7 @@ class CustomerOrderService {
         val channel = Channel<Order>(10)
 
         mapAndFetchOrdersAsync(orders, channel)
+
         var allOrderList = emptyList<Order>()
         repeat(orders.size) {
             allOrderList = (allOrderList + channel.receive())
@@ -53,7 +74,6 @@ class CustomerOrderService {
     }
 
     private suspend fun mapAndFetchOrdersAsync(orders: List<OrderDTO>, channel: Channel<Order>) = coroutineScope {
-        //TODO call api with retrofit
         orders.map { orderDTO ->
             launch {
                 val product = getProductDataAdapter(orderDTO.productId)
@@ -68,49 +88,35 @@ class CustomerOrderService {
         }
     }
 
-    private fun getClientOrdersAdapter(clientId: Long): List<OrderDTO> {
+    private suspend fun getClientOrdersAdapter(clientId: Long): List<OrderDTO> {
         val url = "http://localhost:8082/api/v1/orders?client_id=$clientId"
-        val text = makeGetRequest(url)
-        if (text.isEmpty()) {
-            return listOf()
-        }
-        return Json.decodeFromString(text)
-    }
-
-    private fun getCustomerDataAdapter(clientId: Long): Optional<CustomerDTO> {
-        val url = "http://localhost:8081/api/v1/customers/$clientId"
-        val text = makeGetRequest(url)
-        if (text.isEmpty()) {
-            return Optional.empty()
-        }
-        return Optional.of(Json.decodeFromString(text))
-    }
-
-    private fun getProductDataAdapter(productId: Long): Optional<ProductDTO> {
-        val url = "http://localhost:8080/api/v1/products/$productId"
-        val text = makeGetRequest(url)
-        if (text.isEmpty()) {
-            return Optional.empty()
-        }
-        return Optional.of(Json.decodeFromString(text))
-    }
-
-    private fun makeGetRequest(url: String): String {
-        val client = HttpClient.newBuilder().build()
-        val request = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .build()
-
-        try {
-            val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-            println(url)
-            if (response.statusCode() >= 400) {
-                return ""
-            }
-            return response.body()
+        return try {
+            client.get(url).body()
         } catch (e: Exception) {
             logger.error(e.message)
-            return ""
+            return listOf()
+        }
+    }
+
+    private suspend fun getCustomerDataAdapter(clientId: Long): Optional<CustomerDTO> {
+        val url = "http://localhost:8081/api/v1/customers/$clientId"
+        return try {
+            val response: CustomerDTO = client.get(url).body()
+            Optional.of(response)
+        } catch (e: Exception) {
+            logger.error(e.message)
+            Optional.empty()
+        }
+    }
+
+    private suspend fun getProductDataAdapter(productId: Long): Optional<ProductDTO> {
+        val url = "http://localhost:8080/api/v1/products/$productId"
+        return try {
+            val response: ProductDTO = client.get(url).body()
+            Optional.of(response)
+        } catch (e: Exception) {
+            logger.error(e.message)
+            Optional.empty()
         }
     }
 }

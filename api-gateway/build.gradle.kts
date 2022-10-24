@@ -11,6 +11,7 @@ plugins {
 group = "com.col3name"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_17
+val ktorVersion: String = "2.1.2"
 
 repositories {
     mavenCentral()
@@ -19,26 +20,25 @@ repositories {
 extra["testcontainersVersion"] = "1.17.4"
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+//    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+//    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+
+    implementation("com.google.code.gson:gson:2.9.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+
     implementation("org.springframework.kafka:spring-kafka")
-    implementation("com.google.code.gson:gson:2.9.1")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-
-
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:retrofit-mock:2.9.0")
-    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
-    implementation("com.squareup.okhttp3:okhttp:4.10.0")
-
-    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
-    implementation("io.reactivex.rxjava2:rxkotlin:2.4.0")
-    implementation("com.squareup.retrofit2:adapter-rxjava2:2.9.0")
-    implementation("org.springframework.boot:spring-boot-starter-log4j2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
